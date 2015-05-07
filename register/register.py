@@ -149,19 +149,3 @@ class Register(object):
         Returns the maximum value for the register.
         """
         raise NotImplementedError("Look somewhere else, dumbo.")
-
-
-class R16(Register):
-    pass
-
-
-class R32(Register):
-    pass
-
-
-class R64(Register):
-    pass
-
-
-class R128(Register):
-    pass

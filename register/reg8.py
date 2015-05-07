@@ -1,10 +1,10 @@
-from .register import Register, Endianness, Complement
+from .register import Register, Endianness, Complement, BitFirst
 from util.base_converter import BaseConverter
 
 
 class Reg8(Register):
 
-    def __init__(self, value=0, endianness=Endianness.LE, bitfirst=Register.BitFirst.MSBF,
+    def __init__(self, value=0, endianness=Endianness.LE, bitfirst=BitFirst.MSBF,
                  complement=Complement.COMP2):
         self.__value = value
         self.__endianness = endianness

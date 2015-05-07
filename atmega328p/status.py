@@ -195,3 +195,15 @@ class Status(object):
     @property
     def zh(self):
         return self.r31
+
+    @property
+    def x(self):
+        return self.__reg_X
+
+    @property
+    def y(self):
+        return self.__reg_Y
+
+    @property
+    def z(self):
+        return self.__reg_Z
