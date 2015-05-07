@@ -133,9 +133,9 @@ class R8(Register):
             raise Exception("NOPE.WAV")
 
         if self.__bitfirst == Register.BitFirst.MSBF:
-            self._or(self.max_value - 2**bit)
+            self._or(2**bit)
         else:
-            self._or(self.max_value - 2**(7-bit))
+            self._or(2**(7-bit))
 
     def _and(self, mask):
         if mask < 0 or mask > self.max_value:
