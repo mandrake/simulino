@@ -2,9 +2,9 @@ from .register import Register, Endianness, Complement
 from util.base_converter import BaseConverter
 
 
-class R8(Register):
+class Reg8(Register):
 
-    def __init__(self, value=0, endianness=Endianness.BE, bitfirst=Register.BitFirst.MSBF,
+    def __init__(self, value=0, endianness=Endianness.LE, bitfirst=Register.BitFirst.MSBF,
                  complement=Complement.COMP2):
         self.__value = value
         self.__endianness = endianness
@@ -51,12 +51,13 @@ class R8(Register):
         temp = self.__value + value
         if temp > self.max_value:
             self.__carry = True
-        self.__value = temp % self.max_value
+            temp %= self.max_value + 1
+        self.__value = temp
 
     def _sub(self, value):
         # TODO: recheck thoroughly all this code.
+        # TODO: check for underflow for too large values.
         temp = self.__value - value
-        temp %= self.max_value + 1
         if temp < 0:
             self.__carry = True
             if self.__complement == Complement.COMP1:
@@ -73,11 +74,13 @@ class R8(Register):
 
     @property
     def bin(self):
-        self.value_base(2)
+        v = self.value_base(2)
+        return '0' * (8 - len(v)) + v
 
     @property
     def hex(self):
-        self.value_base(16)
+        v = self.value_base(16)
+        return '0' * (2 - len(v)) + v
 
     @property
     def bin_raw(self):
