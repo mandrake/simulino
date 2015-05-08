@@ -10,4 +10,13 @@ class ATMEGA328P:
         self.__opcodes = Opcoder(opcodes)
 
     def execute(self, opcode):
-        print(self.__opcodes.lookup(opcode, 16))
+        return self.__opcodes.lookup(opcode, 16)
+
+    def sbroscia(self, file):
+        data = file.read()
+        while data:
+            a, b = self.execute(
+                sum([x * y for (x, y) in zip(data[0:4], [2**24, 2**16, 2**8, 1])])
+            )
+            print(a)
+            data = data[b//8:]
