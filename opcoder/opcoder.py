@@ -15,10 +15,11 @@ class Opcoder:
         for regex in self.__opcodes:
             res = re.match(regex, scode[0:16])
             if res is not None:
+                # {'repr': '...', 'abstract': '...'}
                 oc = self.__opcodes[regex]
                 ops = [int(x, 2) for x in res.groups()]
                 if 'extra' in oc:
                     ops.append(int(scode[16:16+8*oc['extra']]))
                     size += oc['extra']
-                return oc['repr'](ops), size
-        return '???', 16
+                return oc, ops, size
+        return '???', [], 16

@@ -1,6 +1,4 @@
-from atmega328p.atmega328p import ATMEGA328P
+from atmega328p.tests.execution_test import demo_overflow
 
-ino = ATMEGA328P()
-print(ino.execute(0x0FFF)[0])
-print(ino.execute(0x96FF)[0])
-print(ino.execute(0x23FF)[0])
+if __name__ == '__main__':
+    demo_overflow()

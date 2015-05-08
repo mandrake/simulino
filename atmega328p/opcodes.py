@@ -1,19 +1,25 @@
 opcodes = {
     '000111([01])([01]{5})([01]{4})': {
-        'repr': lambda x: 'ADC R%d, R%d' % (x[1], x[0] * 16 + x[2])
+        # ADC dest, src
+        'repr': lambda x: 'ADC R%d, R%d' % (x[1], x[0] * 16 + x[2]),
+        'abstract': lambda x: ('ADC', 'R%d' % x[1], 'R%d' % (x[0] * 16 + x[2]))
     },
     '000011([01])([01]{5})([01]{4})': {
-        'repr': lambda x: 'ADD R%d, R%d' % (x[1], x[0] * 16 + x[2])
+        # ADD dest, src
+        'repr': lambda x: 'ADD R%d, R%d' % (x[1], x[0] * 16 + x[2]),
+        'abstract': lambda x: ('ADD', 'R%d' % x[1], 'R%d' % (x[0] * 16 + x[2]))
     },
     '10010110([01]{2})([01]{2})([01]{4})': {
         'repr': lambda x: 'ADIW R%d:R%d, R%d' % (
             [25, 27, 29, 31][x[1]],
             [24, 26, 28, 30][x[1]],
             x[0] * 16 + x[2]
-        )
+        ),
+        'abstract': lambda x: ('ADIW', x[1], x[0] * 16 + x[2])
     },
     '001000([01])([01]{5})([01]{4})': {
-        'repr': lambda x: 'AND R%d, R%d' % (x[1], x[0] * 16 + x[2])
+        'repr': lambda x: 'AND R%d, R%d' % (x[1], x[0] * 16 + x[2]),
+        'abstract': lambda x: ('AND', 'R%d' % x[1], 'R%d' % (x[0] * 16 + x[2]))
     },
     '0111([01]{4})([01]{4})([01]{4})': {
         'repr': lambda x: 'ANDI R%d, %d' % (x[1], x[0] * 16 + x[2])
