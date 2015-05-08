@@ -27,6 +27,7 @@ opcodes = {
     },
     '1001010([01]{5})0101': {
         'repr': lambda x: 'ASR R%d' % x[0],
+        'abstract': lambda x: ('ASR', 'R%s' % x[0])
     },
     '100101001([01]{3})1000': {
         'repr': lambda x: 'BCLR %d' % x[0]

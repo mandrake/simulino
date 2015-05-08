@@ -46,8 +46,8 @@ class ATMEGA328P:
         self.__ADD(ops, carry=True)
 
     def __ADIW(self, ops):
-        dst = int(ops[0])
-        immw = int(ops[1])
+        dst = ops[0]
+        immw = ops[1]
         rdsth = getattr(self.status, 'r' + [25, 27, 29, 31][dst])
         rdstl = getattr(self.status, 'r' + [24, 26, 28, 39][dst])
 
@@ -71,7 +71,46 @@ class ATMEGA328P:
             callback() if vars()[flag] else None
 
     def __AND(self, ops):
-        print(ops)
+        rdst = getattr(self.status, ops[0].lower())
+        rsrc = getattr(self.status, ops[1].lower())
+        rdst._and(rsrc.unsigned_value)
+
+        v = 0
+        n = bool(rdst.unsigned_value & 0x80)
+        z = bool(rdst.unsigned_value)
+        s = v ^ n
+
+        for flag in ['s', 'v', 'n', 'z']:
+            callback = getattr(self.status.sreg, 'set_' + flag)
+            callback() if vars()[flag] else None
+
+    def __ANDI(self, ops):
+        rdst = getattr(self.status, ops[0].lower())
+        immb = ops[1]
+
+        rdst._and(immb)
+
+        v = 0
+        n = bool(rdst.unsigned_value & 0x80)
+        z = bool(rdst.unsigned_value)
+        s = v ^ n
+
+        for flag in ['s', 'v', 'n', 'z']:
+            callback = getattr(self.status.sreg, 'set_' + flag)
+            callback() if vars()[flag] else None
+
+    def __ASR(self, ops):
+        rdst = getattr(self.status, ops[0].lower())
+        c = bool(rdst.unsigned_value % 2)
+        rdst._value = (rdst._value & 0x80) + (rdst._value & 0x7F) // 2
+        n = bool(rdst._value & 0x80)
+        z = bool(rdst._value)
+        v = n ^ c
+        s = n ^ v
+
+        for flag in ['s', 'v', 'n', 'z', 'c']:
+            callback = getattr(self.status.sreg, 'set_' + flag)
+            callback() if vars()[flag] else None
 
     def sbroscia(self, file):
         data = file.read()
