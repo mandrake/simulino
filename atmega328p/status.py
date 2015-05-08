@@ -4,6 +4,96 @@ from register.reg16 import Reg16
 
 class Status(object):
 
+    class StatusReg(Reg8):
+        CARRY_MASK = 0x01
+        ZERO_MASK = 0x02
+        NEG_MASK = 0x04
+        OFLOW_MASK = 0x08
+        SFLAG_MASK = 0x10
+        HALFC_MASK = 0x20
+        TRANS_MASK = 0x40
+        INTER_MASK = 0x80
+
+        @property
+        def c(self):
+            """
+            :return: Carry Flag
+            """
+            return (self.value & self.CARRY_MASK) != 0
+
+        @property
+        def z(self):
+            """
+            :return: Zero Flag
+            """
+            return (self.value & self.ZERO_MASK) != 0
+
+        @property
+        def n(self):
+            """
+            :return: Negative Flag
+            """
+            return (self.value & self.NEG_MASK) != 0
+
+        @property
+        def v(self):
+            """
+            :return: Two’s complement overflow indicator
+            """
+            return (self.value & self.OFLOW_MASK) != 0
+
+        @property
+        def s(self):
+            """
+            :return: N ⊕ V, For signed tests
+            """
+            return (self.value & self.SFLAG_MASK) != 0
+
+        @property
+        def h(self):
+            """
+            :return: Half Carry Flag
+            """
+            return (self.value & self.HALFC_MASK) != 0
+
+        @property
+        def t(self):
+            """
+            :return: Transfer bit used by BLD and BST instructions
+            """
+            return (self.value & self.TRANS_MASK) != 0
+
+        @property
+        def i(self):
+            """
+            :return: Global Interrupt Enable/Disable Flag
+            """
+            return (self.value & self.INTER_MASK) != 0
+
+        def set_c(self):
+            self.value |= self.CARRY_MASK
+
+        def set_z(self):
+            self.value |= self.ZERO_MASK
+
+        def set_n(self):
+            self.value |= self.NEG_MASK
+
+        def set_v(self):
+            self.value |= self.OFLOW_MASK
+
+        def set_s(self):
+            self.value |= self.SFLAG_MASK
+
+        def set_h(self):
+            self.value |= self.HALFC_MASK
+
+        def set_t(self):
+            self.value |= self.TRANS_MASK
+
+        def set_i(self):
+            self.value |= self.INTER_MASK
+
     def __init__(self):
         # General purpose registers
         self.__reg_0 = Reg8()
@@ -43,6 +133,8 @@ class Status(object):
         self.__reg_X = Reg16()
         self.__reg_Y = Reg16()
         self.__reg_Z = Reg16()
+
+        self.__status_reg = StatusReg()
 
     @property
     def r0(self):
@@ -207,3 +299,7 @@ class Status(object):
     @property
     def z(self):
         return self.__reg_Z
+
+    @property
+    def sreg(self):
+        return self.__status_reg

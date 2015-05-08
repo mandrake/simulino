@@ -20,6 +20,7 @@ class ATMEGA328P:
         rdst = getattr(self.status, ops[0].lower())
         rsrc = getattr(self.status, ops[1].lower())
         rdst._add(rsrc.unsigned_value)
+        if (rdst._carry())
 
     def __ADC(self, ops):
         print(ops)
