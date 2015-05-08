@@ -22,10 +22,11 @@ opcodes = {
         'abstract': lambda x: ('AND', 'R%d' % x[1], 'R%d' % (x[0] * 16 + x[2]))
     },
     '0111([01]{4})([01]{4})([01]{4})': {
-        'repr': lambda x: 'ANDI R%d, %d' % (x[1], x[0] * 16 + x[2])
+        'repr': lambda x: 'ANDI R%d, %d' % (x[1], x[0] * 16 + x[2]),
+        'abstract': lambda x: ('ANDI', 'R%d' % x[1], x[0] * 16 + x[2])
     },
     '1001010([01]{5})0101': {
-        'repr': lambda x: 'ASR R%d' % x[0]
+        'repr': lambda x: 'ASR R%d' % x[0],
     },
     '100101001([01]{3})1000': {
         'repr': lambda x: 'BCLR %d' % x[0]

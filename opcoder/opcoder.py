@@ -22,4 +22,5 @@ class Opcoder:
                     ops.append(int(scode[16:16+8*oc['extra']]))
                     size += oc['extra']
                 return oc, ops, size
+
         return '???', [], 16

@@ -6,10 +6,9 @@ class Reg16(Register):
 
     def __init__(self, value=0, endianness=Endianness.LE, bitfirst=BitFirst.MSBF,
                  complement=Complement.COMP2):
-        self.__value = value
+        self._value = value
         self.__endianness = endianness
         self.__bitfirst = bitfirst
-        self.__carry = False
         self.__complement = complement
 
     def _reset(self, bit):
@@ -33,40 +32,35 @@ class Reg16(Register):
         if mask < 0 or mask > self.max_value:
             raise Exception("NOPE.WAV")
 
-        self.__value &= mask
+        self._value &= mask
 
     def _or(self, mask):
         if mask < 0 or mask > self.max_value:
             raise Exception("NOPE.WAV")
 
-        self.__value |= mask
+        self._value |= mask
 
     def _xor(self, mask):
         if mask < 0 or mask > self.max_value:
             raise Exception("NOPE.WAV")
 
-        self.__value ^= mask
+        self._value ^= mask
 
     def _add(self, value):
-        temp = self.__value + value
+        temp = self._value + value
         if temp > self.max_value:
-            self.__carry = True
             temp %= self.max_value + 1
-        self.__value = temp
+        self._value = temp
 
     def _sub(self, value):
         # TODO: recheck thoroughly all this code.
         # TODO: check for underflow for too large values.
-        temp = self.__value - value
+        temp = self._value - value
         if temp < 0:
-            self.__carry = True
             if self.__complement == Complement.COMP1:
-                self.__value = self.max_value + temp
+                self._value = self.max_value + temp
             elif self.__complement == Complement.COMP2:
-                self.__value = self.max_value + temp + 1
-
-    def _carry(self):
-        return self.__carry
+                self._value = self.max_value + temp + 1
 
     @property
     def max_value(self):
@@ -100,18 +94,18 @@ class Reg16(Register):
 
     @property
     def unsigned_value(self):
-        return self.__value
+        return self._value
 
     @property
     def signed_value(self):
         # TODO: recheck thoroughly all this code.
-        if self.__value > (self.max_value - 1) / 2:
+        if self._value > (self.max_value - 1) / 2:
             if self.__complement == Complement.COMP1:
-                return -(self.max_value - self.__value)
+                return -(self.max_value - self._value)
             elif self.__complement == Complement.COMP2:
-                return -((self.max_value - self.__value) + 1)
+                return -((self.max_value - self._value) + 1)
         else:
-            return self.__value
+            return self._value
 
     def value_base(self, base):
-        return BaseConverter.convert_value(self.__value, base)
+        return BaseConverter.convert_value(self._value, base)

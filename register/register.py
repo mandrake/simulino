@@ -137,12 +137,6 @@ class Register(object):
         """
         raise NotImplementedError("Look somewhere else, dumbo.")
 
-    def _carry(self):
-        """
-        Returns true if the last operation raised a carry.
-        """
-        raise NotImplementedError("Look somewhere else, dumbo.")
-
     @property
     def max_value(self):
         """
