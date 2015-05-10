@@ -1,6 +1,8 @@
+from copy import deepcopy
 from atmega328p.data_mem_space import DataMemorySpace
 from atmega328p.ioregisters import IORegisters
 from atmega328p.memory import Memory
+from register.reg8 import Reg8
 from .status import Status
 from opcoder.opcoder import Opcoder
 from .opcodes import opcodes
@@ -143,6 +145,37 @@ class ATMEGA328P:
         self.status.sreg.n = rdst.isset(7)
         self.status.sreg.z = bool(rdst.unsigned_value)
         self.status.sreg.s = self.status.sreg.v ^ self.status.sreg.n
+
+    def __COM(self, ops):
+        rdst = getattr(self.status, ops[0].lower())
+        rdst.lxor(0xff)
+
+    def __CP(self, ops, carry=False, immediate=False):
+        rdst = getattr(self.status, ops[0].lower())
+        rsrc = getattr(self.status, ops[1].lower())
+        rrrr = deepcopy(rdst)
+        if carry:
+            rrrr.sub(rsrc.unsigned_value + 1 if self.status.sreg.c else 0)
+        elif immediate:
+            rrrr.sub(rsrc.unsigned_value + 1 if self.status.sreg.i else 0)
+        else:
+            rrrr.sub(rsrc.unsigned_value)
+        rd = rdst.unsigned_value
+        rs = rsrc.unsigned_value
+        rr = rrrr.unsigned_value
+
+        self.status.sreg.c = bool(((rd & rs) | (rs & ~rr) | (rd & ~rr)) & 0x80)
+        self.status.sreg.h = bool(((rd & rs) | (rs & ~rr) | (rd & ~rr)) & 0x08)
+        self.status.sreg.v = bool(((rd & rs & ~rr) | (~rd & ~rs & rr)) & 0x80)
+        self.status.sreg.n = bool(rr & 0x80)
+        self.status.sreg.z = bool(rr)
+        self.status.sreg.s = self.status.sreg.n ^ self.status.sreg.v
+
+    def __CPC(self, ops):
+        self.__CP(self, ops, carry=True)
+
+    def __CPI(self, ops):
+        self.__CP(self, ops, immediate=True)
 
     def sbroscia(self, file):
         data = file.read()

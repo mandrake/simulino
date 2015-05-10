@@ -146,7 +146,7 @@ opcodes = {
     },
     '1111101([01]{5})0([01]{3})': {
         'repr': lambda x: 'BST R%d, %d' % (x[0], x[1]),
-        'abstract': lambda x: ('BST', x[0], x[1])
+        'abstract': lambda x: ('BST', 'R%d' % x[0], x[1])
     },
     '1001010([01]{5})111([01])': {
         'repr': lambda x: 'CALL %d' % (x[0] * 2 + x[1]),
@@ -157,40 +157,52 @@ opcodes = {
         'abstract': lambda x: ('CBI', x[0], x[1])
     },
     '1001010010001000': {
-        'repr': lambda x: 'CLC'
+        'repr': lambda x: 'CLC',
+        'abstract': lambda x: ('BCLR', 0)
     },
     '1001010011011000': {
-        'repr': lambda x: 'CLH'
+        'repr': lambda x: 'CLH',
+        'abstract': lambda x: ('BCLR', 5)
     },
     '1001010011111000': {
-        'repr': lambda x: 'CLI'
+        'repr': lambda x: 'CLI',
+        'abstract': lambda x: ('BCLR', 7)
     },
     '1001010010101000': {
-        'repr': lambda x: 'CLN'
+        'repr': lambda x: 'CLN',
+        'abstract': lambda x: ('BCLR', 2)
     },
     '1001010011001000': {
-        'repr': lambda x: 'CLS'
+        'repr': lambda x: 'CLS',
+        'abstract': lambda x: ('BCLR', 4)
     },
     '1001010011101000': {
-        'repr': lambda x: 'CLT'
+        'repr': lambda x: 'CLT',
+        'abstract': lambda x: ('BCLR', 6)
     },
     '1001010010111000': {
-        'repr': lambda x: 'CLV'
+        'repr': lambda x: 'CLV',
+        'abstract': lambda x: ('BCLR', 3)
     },
     '1001010010011000': {
-        'repr': lambda x: 'CLZ'
+        'repr': lambda x: 'CLZ',
+        'abstract': lambda x: ('BCLR', 1)
     },
     '1001010([01]{5})0000': {
-        'repr': lambda x: 'COM %d' % x[0]
+        'repr': lambda x: 'COM %d' % x[0],
+        'abstract': lambda x: ('COM', x[0])
     },
     '000101([01])([01]{5})([01]{4})': {
-        'repr': lambda x: 'CP R%d, R%d' % (x[1], x[0] * 16 + x[2])
+        'repr': lambda x: 'CP R%d, R%d' % (x[1], x[0] * 16 + x[2]),
+        'abstract': lambda x: ('CP', 'R%d' % x[1], 'R%d' % (x[0] * 16 + x[2]))
     },
     '000001([01])([01]{5})([01]{4})': {
-        'repr': lambda x: 'CPC R%d, R%d' % (x[1], x[0] * 16 + x[2])
+        'repr': lambda x: 'CPC R%d, R%d' % (x[1], x[0] * 16 + x[2]),
+        'abstract': lambda x: ('CPC', 'R%d' % x[1], 'R%d' % (x[0] * 16 + x[2]))
     },
     '0011([01]{4})([01]{4})([01]{4})': {
-        'repr': lambda x: 'CPI R%d, %d' % (x[1], x[0] * 16 + x[2])
+        'repr': lambda x: 'CPI R%d, %d' % (x[1], x[0] * 16 + x[2]),
+        'abstract': lambda x: ('CPI', 'R%d' % x[1], 'R%d' % (x[0] * 16 + x[2]))
     },
     '000100([01])([01]{5})([01]{4})': {
         'repr': lambda x: 'CPSE R%d, R%d' % (x[1], x[0] * 16 + x[2])
