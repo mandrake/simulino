@@ -1,3 +1,6 @@
+from atmega328p.data_mem_space import DataMemorySpace
+from atmega328p.ioregisters import IORegisters
+from atmega328p.memory import Memory
 from .status import Status
 from opcoder.opcoder import Opcoder
 from .opcodes import opcodes
@@ -7,16 +10,17 @@ class ATMEGA328P:
 
     def __init__(self):
         self.status = Status()
+        self.ioregs = IORegisters()
+        self.xiomem = Memory(160)
+        self.sram = Memory(2048)
         self.__opcodes = Opcoder(opcodes)
+        self.__data_mem_space = DataMemorySpace(self.status, self.ioreg, self.xiomem, self.sram)
 
     def execute(self, opcode):
         lkp = self.__opcodes.lookup(opcode, 16)  # entry, opcode values, size
         op = lkp[0]  # has 'repr' and 'abstract'
         ab = op['abstract'](lkp[1])  # returns (opcode, operand1, operand2, ...)
         # TODO: This sucks.
-        #self.c, self.t, self.z, self.h, self.v, self.p, self.n, self.i = \
-        #    self.status.sreg.c, self.status.sreg.t, self.status.sreg.z, self.status.sreg.h, \
-        #    self.status.sreg.
         getattr(self, '_ATMEGA328P__' + ab[0])(ab[1:])
         self.status.pc.inc()
 
@@ -27,13 +31,6 @@ class ATMEGA328P:
         rs = rsrc.unsigned_value
         rdst.add(rsrc.unsigned_value + (1 if carry and self.status.sreg.c else 0))
         rr = rdst.unsigned_value
-
-        # c = ((rd & rs & 0x80) != 0) or ((rs & ~rr & 0x80) != 0) or ((rd & ~rr & 0x80) != 0)
-        # h = ((rd & rs & 0x08) != 0) or ((rs & ~rr & 0x08) != 0) or ((rd & ~rr & 0x80) != 0)
-        # v = ((rd & rs & ~rr & 0x80) != 0) or ((~rd & ~rs & rr & 0x80) != 0)
-        # n = (rr & 0x80) != 0
-        # z = (rr == 0)
-        # s = n ^ v
 
         self.status.sreg.c = bool(((rd & rs) | (rs & ~rr) | (rd & ~rr)) & 0x80)
         self.status.sreg.h = bool(((rd & rs) | (rs & ~rr) | (rd & ~rr)) & 0x08)
@@ -60,7 +57,7 @@ class ATMEGA328P:
         rd = rdsth.unsigned_value
         rs = immw // 256
         rdsth._add(rs + (1 if ctmp else 0))
-        rr = rdsth = rdsth.unsigned_value
+        rr = rdsth.unsigned_value
 
         self.status.sreg.c = bool(((rd & rs) | (rs & ~rr) | (rd & ~rr)) & 0x80)
         self.status.sreg.v = bool((~rd & rr & 0x80) != 0)
@@ -74,7 +71,7 @@ class ATMEGA328P:
         rdst.land(rsrc.unsigned_value)
 
         self.status.sreg.v = False
-        self.status.sreg.n = bool(rdst.unsigned_value & 0x80)
+        self.status.sreg.n = rdst.isset(7)
         self.status.sreg.z = bool(rdst.unsigned_value)
         self.status.sreg.s = self.status.sreg.v ^ self.status.sreg.n
 
@@ -93,7 +90,7 @@ class ATMEGA328P:
         rdst = getattr(self.status, ops[0].lower())
         self.status.sreg.c = bool(rdst.unsigned_value % 2)
         rdst._value = (rdst._value & 0x80) + (rdst._value & 0x7F) // 2
-        self.status.sreg.n = bool(rdst._value & 0x80)
+        self.status.sreg.n = rdst.isset(7)
         self.status.sreg.z = bool(rdst._value)
         self.status.sreg.v = self.status.sreg.n ^ self.status.sreg.c
         self.status.sreg.s = self.status.sreg.n ^ self.status.sreg.v
@@ -113,7 +110,7 @@ class ATMEGA328P:
         if branch:
             self.status.pc.add(ops[1]) if ops[1] >= 0 else self.status.pc.sub(-ops[1])
 
-    def __BRBS(self, ops): #
+    def __BRBS(self, ops):
         branch = self.status.sreg.isset(ops[0])
         if branch:
             self.status.pc.add(ops[1]) if ops[1] >= 0 else self.status.pc.sub(-ops[1])
@@ -121,6 +118,31 @@ class ATMEGA328P:
     def __BREAK(self, ops):
         # TODO: implement stop mode (is it really necessary?)
         pass
+
+    def __BSET(self, ops):
+        self.status.sreg.set(ops[0])
+
+    def __BST(self, ops):
+        rdst = getattr(self.status, ops[0].lower())
+        self.status.sreg.t = rdst.isset(ops[1])
+
+    def __CALL(self, ops):
+        self.__data_mem_space[self.ioregs.sp] = (self.status.pc + 2) // 256
+        self.__data_mem_space[self.ioregs.sp-1] = (self.status.pc + 2) % 256
+        self.status.pc._value = ops[0]
+        self.ioregs.sp.sub(2)
+
+    def __CBI(self, ops):
+        self.__data_mem_space[ops[0]] &= 255 - (2**ops[1])
+
+    def __CBR(self, ops):
+        rdst = getattr(self.status, ops[0].lower())
+        rdst.land(256 - ops[1])
+
+        self.status.sreg.v = 0
+        self.status.sreg.n = rdst.isset(7)
+        self.status.sreg.z = bool(rdst.unsigned_value)
+        self.status.sreg.s = self.status.sreg.v ^ self.status.sreg.n
 
     def sbroscia(self, file):
         data = file.read()

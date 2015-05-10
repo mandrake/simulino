@@ -68,71 +68,93 @@ opcodes = {
     },
     '111101([01]{7})100': {
         # TODO: check the 2's complement here
-        'repr': lambda x: 'BRGE %d' % (x[0] if x[0] < 64 else -(128 - x[0]))
+        'repr': lambda x: 'BRGE %d' % (x[0] if x[0] < 64 else -(128 - x[0])),
+        'abstract': lambda x: ('BRBC', 4, x[0])
     },
     '111101([01]{7})101': {
         # TODO: check the 2's complement here
-        'repr': lambda x: 'BRHC %d' % (x[0] if x[0] < 64 else -(128 - x[0]))
+        'repr': lambda x: 'BRHC %d' % (x[0] if x[0] < 64 else -(128 - x[0])),
+        'abstract': lambda x: ('BRBC', 5, x[0])
     },
     '111100([01]{7})101': {
         # TODO: check the 2's complement here
-        'repr': lambda x: 'BRHS %d' % (x[0] if x[0] < 64 else -(128 - x[0]))
+        'repr': lambda x: 'BRHS %d' % (x[0] if x[0] < 64 else -(128 - x[0])),
+        'abstract': lambda x: ('BRBS', 4, x[0])
     },
     '111101([01]{7})111': {
         # TODO: check the 2's complement here
-        'repr': lambda x: 'BRID %d' % (x[0] if x[0] < 64 else -(128 - x[0]))
+        'repr': lambda x: 'BRID %d' % (x[0] if x[0] < 64 else -(128 - x[0])),
+        'abstract': lambda x: ('BRBC', 7, x[0])
     },
     '111100([01]{7})111': {
         # TODO: check the 2's complement here
-        'repr': lambda x: 'BRIE %d' % (x[0] if x[0] < 64 else -(128 - x[0]))
+        'repr': lambda x: 'BRIE %d' % (x[0] if x[0] < 64 else -(128 - x[0])),
+        'abstract': lambda x: ('BRBS', 7, x[0])
     },
+    #'111100([01]{7})000': {
+    #    'repr': lambda x: 'BRLO %d' % (x[0] if x[0] < 64 else -(128 - x[0])),
+    #    'abstract': lambda x: ('BRBS', 0, x[0])
+    #},
     '111100([01]{7})100': {
         # TODO: check the 2's complement here
-        'repr': lambda x: 'BRLT %d' % (x[0] if x[0] < 64 else -(128 - x[0]))
+        'repr': lambda x: 'BRLT %d' % (x[0] if x[0] < 64 else -(128 - x[0])),
+        'abstract': lambda x: ('BRBS', 4, x[0])
     },
     '111100([01]{7})010': {
         # TODO: check the 2's complement here
-        'repr': lambda x: 'BRMI %d' % (x[0] if x[0] < 64 else -(128 - x[0]))
+        'repr': lambda x: 'BRMI %d' % (x[0] if x[0] < 64 else -(128 - x[0])),
+        'abstract': lambda x: ('BRBS', 2, x[0])
     },
     '111101([01]{7})001': {
         # TODO: check the 2's complement here
-        'repr': lambda x: 'BRNE %d' % (x[0] if x[0] < 64 else -(128 - x[0]))
+        'repr': lambda x: 'BRNE %d' % (x[0] if x[0] < 64 else -(128 - x[0])),
+        'abstract': lambda x: ('BRBC', 1, x[0])
     },
     '111101([01]{7})010': {
         # TODO: check the 2's complement here
-        'repr': lambda x: 'BRPL %d' % (x[0] if x[0] < 64 else -(128 - x[0]))
+        'repr': lambda x: 'BRPL %d' % (x[0] if x[0] < 64 else -(128 - x[0])),
+        'abstract': lambda x: ('BRBC', 2, x[0])
     },
     '111101([01]{7})000': {
         # TODO: check the 2's complement here
-        'repr': lambda x: 'BRSH %d' % (x[0] if x[0] < 64 else -(128 - x[0]))
+        'repr': lambda x: 'BRSH %d' % (x[0] if x[0] < 64 else -(128 - x[0])),
+        'abstract': lambda x: ('BRBC', 0, x[0])
     },
     '111101([01]{7})110': {
         # TODO: check the 2's complement here
-        'repr': lambda x: 'BRTC %d' % (x[0] if x[0] < 64 else -(128 - x[0]))
+        'repr': lambda x: 'BRTC %d' % (x[0] if x[0] < 64 else -(128 - x[0])),
+        'abstract': lambda x: ('BRBC', 6, x[0])
     },
     '111100([01]{7})110': {
         # TODO: check the 2's complement here
-        'repr': lambda x: 'BRTS %d' % (x[0] if x[0] < 64 else -(128 - x[0]))
+        'repr': lambda x: 'BRTS %d' % (x[0] if x[0] < 64 else -(128 - x[0])),
+        'abstract': lambda x: ('BRBS', 6, x[0])
     },
     '111101([01]{7})011': {
         # TODO: check the 2's complement here
-        'repr': lambda x: 'BRVC %d' % (x[0] if x[0] < 64 else -(128 - x[0]))
+        'repr': lambda x: 'BRVC %d' % (x[0] if x[0] < 64 else -(128 - x[0])),
+        'abstract': lambda x: ('BRBC', 3, x[0])
     },
     '111100([01]{7})011': {
         # TODO: check the 2's complement here
-        'repr': lambda x: 'BRVS %d' % (x[0] if x[0] < 64 else -(128 - x[0]))
+        'repr': lambda x: 'BRVS %d' % (x[0] if x[0] < 64 else -(128 - x[0])),
+        'abstract': lambda x: ('BRBS', 3, x[0])
     },
     '100101000([01]{3})1000': {
-        'repr': lambda x: 'BSET %d' % x[0]
+        'repr': lambda x: 'BSET %d' % x[0],
+        'abstract': lambda x: ('BSET', x[0])
     },
     '1111101([01]{5})0([01]{3})': {
-        'repr': lambda x: 'BST R%d, %d' % (x[0], x[1])
+        'repr': lambda x: 'BST R%d, %d' % (x[0], x[1]),
+        'abstract': lambda x: ('BST', x[0], x[1])
     },
     '1001010([01]{5})111([01])': {
-        'repr': lambda x: 'CALL %d' % (x[0] * 2 + x[1])
+        'repr': lambda x: 'CALL %d' % (x[0] * 2 + x[1]),
+        'abstract': lambda x: ('CALL', x[0] * 2 + x[1])
     },
     '10011000([01]{5})([01]{3})': {
-        'repr': lambda x: 'CBI %d, %d' % (x[0], x[1])
+        'repr': lambda x: 'CBI %d, %d' % (x[0], x[1]),
+        'abstract': lambda x: ('CBI', x[0], x[1])
     },
     '1001010010001000': {
         'repr': lambda x: 'CLC'

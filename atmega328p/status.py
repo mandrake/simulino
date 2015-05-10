@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from register.proxyregister import ProxyRegister16
 from register.reg8 import Reg8
 from register.reg16 import Reg16
 
@@ -174,7 +175,7 @@ class StatusReg(Reg8):
         self.i = False
 
 
-class Status(object):
+class Status:
 
     def __init__(self):
         # General purpose registers
@@ -211,10 +212,9 @@ class Status(object):
         self.__reg_30 = Reg8()
         self.__reg_31 = Reg8()
 
-        # TODO: implement those two registers in terms of 26-27, 28-29 and 30-31
-        self.__reg_X = Reg16()
-        self.__reg_Y = Reg16()
-        self.__reg_Z = Reg16()
+        self.__reg_X = ProxyRegister16(self.__reg_26, self.__reg_27)
+        self.__reg_Y = ProxyRegister16(self.__reg_28, self.__reg_29)
+        self.__reg_Z = ProxyRegister16(self.__reg_30, self.__reg_31)
 
         self.__status_reg = StatusReg()
 
