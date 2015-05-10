@@ -11,48 +11,48 @@ class Reg16(Register):
         self.__bitfirst = bitfirst
         self.__complement = complement
 
-    def _reset(self, bit):
+    def reset(self, bit):
         if bit < 0 or bit > 15:
             raise Exception("NOPE.WAV")
         if self.__bitfirst == Register.BitFirst.MSBF:
-            self._and(self.max_value - (2**bit))
+            self.land(self.max_value - (2**bit))
         else:
-            self._and(self.max_value - (2**(15-bit)))
+            self.land(self.max_value - (2**(15-bit)))
 
-    def _set(self, bit):
+    def set(self, bit):
         if bit < 0 or bit > 15:
             raise Exception("NOPE.WAV")
 
         if self.__bitfirst == Register.BitFirst.MSBF:
-            self._or(2**bit)
+            self.lor(2**bit)
         else:
-            self._or(2**(15-bit))
+            self.lor(2**(15-bit))
 
-    def _and(self, mask):
+    def land(self, mask):
         if mask < 0 or mask > self.max_value:
             raise Exception("NOPE.WAV")
 
         self._value &= mask
 
-    def _or(self, mask):
+    def lor(self, mask):
         if mask < 0 or mask > self.max_value:
             raise Exception("NOPE.WAV")
 
         self._value |= mask
 
-    def _xor(self, mask):
+    def lxor(self, mask):
         if mask < 0 or mask > self.max_value:
             raise Exception("NOPE.WAV")
 
         self._value ^= mask
 
-    def _add(self, value):
+    def add(self, value):
         temp = self._value + value
         if temp > self.max_value:
             temp %= self.max_value + 1
         self._value = temp
 
-    def _sub(self, value):
+    def sub(self, value):
         # TODO: recheck thoroughly all this code.
         # TODO: check for underflow for too large values.
         temp = self._value - value

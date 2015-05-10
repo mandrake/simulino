@@ -18,80 +18,160 @@ class StatusReg(Reg8):
         """
         :return: Carry Flag
         """
-        return (self._value & self.CARRY_MASK) != 0
+        return bool(self._value & self.CARRY_MASK)
 
     @property
     def z(self):
         """
         :return: Zero Flag
         """
-        return (self._value & self.ZERO_MASK) != 0
+        return bool(self._value & self.ZERO_MASK)
 
     @property
     def n(self):
         """
         :return: Negative Flag
         """
-        return (self._value & self.NEG_MASK) != 0
+        return bool(self._value & self.NEG_MASK)
 
     @property
     def v(self):
         """
         :return: Two’s complement overflow indicator
         """
-        return (self._value & self.OFLOW_MASK) != 0
+        return bool(self._value & self.OFLOW_MASK)
 
     @property
     def s(self):
         """
         :return: N ⊕ V, For signed tests
         """
-        return (self._value & self.SFLAG_MASK) != 0
+        return bool(self._value & self.SFLAG_MASK)
 
     @property
     def h(self):
         """
         :return: Half Carry Flag
         """
-        return (self._value & self.HALFC_MASK) != 0
+        return bool(self._value & self.HALFC_MASK)
 
     @property
     def t(self):
         """
         :return: Transfer bit used by BLD and BST instructions
         """
-        return (self._value & self.TRANS_MASK) != 0
+        return bool(self._value & self.TRANS_MASK)
 
     @property
     def i(self):
         """
         :return: Global Interrupt Enable/Disable Flag
         """
-        return (self._value & self.INTER_MASK) != 0
+        return bool(self._value & self.INTER_MASK)
+
+    @c.setter
+    def c(self, value):
+        if value:
+            self._value |= self.CARRY_MASK
+        else:
+            self._value &= self.max_value - self.CARRY_MASK
+
+    @z.setter
+    def z(self, value):
+        if value:
+            self._value |= self.ZERO_MASK
+        else:
+            self._value &= self.max_value - self.ZERO_MASK
+
+    @n.setter
+    def n(self, value):
+        if value:
+            self._value |= self.NEG_MASK
+        else:
+            self._value &= self.max_value - self.NEG_MASK
+
+    @v.setter
+    def v(self, value):
+        if value:
+            self._value |= self.OFLOW_MASK
+        else:
+            self._value &= self.max_value - self.OFLOW_MASK
+
+    @s.setter
+    def s(self, value):
+        if value:
+            self._value |= self.SFLAG_MASK
+        else:
+            self._value &= self.max_value - self.SFLAG_MASK
+
+    @h.setter
+    def h(self, value):
+        if value:
+            self._value |= self.HALFC_MASK
+        else:
+            self._value &= self.max_value - self.HALFC_MASK
+
+    @t.setter
+    def t(self, value):
+        if value:
+            self._value |= self.TRANS_MASK
+        else:
+            self._value &= self.max_value - self.TRANS_MASK
+
+    @i.setter
+    def i(self, value):
+        if value:
+            self._value |= self.INTER_MASK
+        else:
+            self._value &= self.max_value - self.INTER_MASK
 
     def set_c(self):
-        self._value |= self.CARRY_MASK
+        self.c = True
 
     def set_z(self):
-        self._value |= self.ZERO_MASK
+        self.z = True
 
     def set_n(self):
-        self._value |= self.NEG_MASK
+        self.n = True
 
     def set_v(self):
-        self._value |= self.OFLOW_MASK
+        self.v = True
 
     def set_s(self):
-        self._value |= self.SFLAG_MASK
+        self.s = True
 
     def set_h(self):
-        self._value |= self.HALFC_MASK
+        self.h = True
 
     def set_t(self):
-        self._value |= self.TRANS_MASK
+        self.t = True
 
     def set_i(self):
-        self._value |= self.INTER_MASK
+        self.i = True
+
+    def rst_c(self):
+        self.c = False
+
+    def rst_z(self):
+        self.z = False
+
+    def rst_n(self):
+        self.n = False
+
+    def rst_v(self):
+        self.v = False
+
+    def rst_s(self):
+        self.s = False
+
+    def rst_h(self):
+        self.h = False
+
+    def rst_t(self):
+        self.t = False
+
+    def rst_i(self):
+        self.i = False
 
 
 class Status(object):
@@ -137,6 +217,9 @@ class Status(object):
         self.__reg_Z = Reg16()
 
         self.__status_reg = StatusReg()
+
+        # Actually, it's a 14 bit register. But for now I'll leave it this way.
+        self.__program_counter = Reg16()
 
     @property
     def r0(self):
@@ -305,3 +388,7 @@ class Status(object):
     @property
     def sreg(self):
         return self.__status_reg
+
+    @property
+    def pc(self):
+        return self.__program_counter

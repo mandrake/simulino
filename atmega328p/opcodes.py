@@ -30,10 +30,12 @@ opcodes = {
         'abstract': lambda x: ('ASR', 'R%s' % x[0])
     },
     '100101001([01]{3})1000': {
-        'repr': lambda x: 'BCLR %d' % x[0]
+        'repr': lambda x: 'BCLR %d' % x[0],
+        'abstract': lambda x: ('BCLR', x[0])
     },
     '1111100([01]{5})0([01]{3})': {
-        'repr': lambda x: 'BLD R%d, %d' % (x[0], x[1])
+        'repr': lambda x: 'BLD R%d, %d' % (x[0], x[1]),
+        'abstract': lambda x: ('BLD', 'R%d' % x[0], x[1])
     },
     # These two opcodes have specialized equivalents
     #'111101([01]{7})([01]{3})': {
@@ -52,14 +54,17 @@ opcodes = {
     #},
     '111100([01]{7})000': {
         # TODO: check the 2's complement here
-        'repr': lambda x: 'BRCS %d' % (x[0] if x[0] < 64 else -(128 - x[0]))
+        'repr': lambda x: 'BRCS %d' % (x[0] if x[0] < 64 else -(128 - x[0])),
+        'abstract': lambda x: ('BRBC', 0, x[0])
     },
     '1001010110011000': {
-        'repr': lambda x: 'BREAK'
+        'repr': lambda x: 'BREAK',
+        'abstract': lambda x: ('BREAK', )
     },
     '111100([01]{7})001': {
         # TODO: check the 2's complement here
-        'repr': lambda x: 'BREQ %d' % (x[0] if x[0] < 64 else -(128 - x[0]))
+        'repr': lambda x: 'BREQ %d' % (x[0] if x[0] < 64 else -(128 - x[0])),
+        'abstract': lambda x: ('BRBS', 1, x[0])
     },
     '111101([01]{7})100': {
         # TODO: check the 2's complement here

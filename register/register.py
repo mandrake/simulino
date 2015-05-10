@@ -81,15 +81,24 @@ class Register(object):
         """
         raise NotImplementedError("Look somewhere else, dumbo.")
 
-    def _set(self, bit):
+    def set(self, bit):
         """
         Sets the i-th bit of the register.
 
-        :param bit The bit to be set
+        :param bit: The bit to be set
         """
         raise NotImplementedError("Look somewhere else, dumbo.")
 
-    def _reset(self, bit):
+    def isset(self, bit):
+        """
+        Tells if the i-th bit of the register is set
+
+        :param bit: The bit to check
+        :return: True if the bit-th bit is set, False otherwise.
+        """
+        raise NotImplementedError("Look somewhere else, dumbo.")
+
+    def reset(self, bit):
         """
         Clears the i-th bit of the register.
 
@@ -97,7 +106,15 @@ class Register(object):
         """
         raise NotImplementedError("Look somewhere else, dumbo.")
 
-    def _and(self, mask):
+    def clear(self, bit):
+        """
+        Clears the i-th bit of the register (a shortend for reset).
+
+        :param bit The bit to be reset
+        """
+        self.reset(bit)
+
+    def land(self, mask):
         """
         Applies a mask with bitwise and to the register.
 
@@ -105,7 +122,7 @@ class Register(object):
         """
         raise NotImplementedError("Look somewhere else, dumbo.")
 
-    def _or(self, mask):
+    def lor(self, mask):
         """
         Applies a mask with bitwise or to the register.
 
@@ -113,7 +130,7 @@ class Register(object):
         """
         raise NotImplementedError("Look somewhere else, dumbo.")
 
-    def _xor(self, mask):
+    def lxor(self, mask):
         """
         Applies a mask with bitwise xor to the register.
 
@@ -121,7 +138,7 @@ class Register(object):
         """
         raise NotImplementedError("Look somewhere else, dumbo.")
 
-    def _add(self, value):
+    def add(self, value):
         """
         Adds a value to the register.
 
@@ -129,17 +146,30 @@ class Register(object):
         """
         raise NotImplementedError("Look somewhere else, dumbo.")
 
-    def _sub(self, value):
+    def inc(self):
+        """
+        Adds 1 to the register (a shorthand for add(1)).
+        """
+        self.add(1)
+
+    def sub(self, value):
         """
         Subtracts a value from the register.
 
-        :param value The value to be subtracted.
+        :param value: The value to be subtracted.
         """
         raise NotImplementedError("Look somewhere else, dumbo.")
+
+    def dec(self):
+        """
+        Subtracts 1 to the register (a shorthand for sub(1)).
+        """
+        self.sub(1)
 
     @property
     def max_value(self):
         """
-        Returns the maximum value for the register.
+        Returns the maximum unsigned value for the register.
+        :return: Max unsigned value for the register.
         """
         raise NotImplementedError("Look somewhere else, dumbo.")

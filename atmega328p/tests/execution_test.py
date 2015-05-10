@@ -1,9 +1,10 @@
 from atmega328p.atmega328p import ATMEGA328P
+from atmega328p.status import StatusReg
 
 
 def test_overflow():
     ino = ATMEGA328P()
-    ino.status.r31._add(10)
+    ino.status.r31.add(10)
     # R30, R31 = (0, 10)
     print('r30:', ino.status.r30.unsigned_value, 'r31:', ino.status.r31.unsigned_value)
     ino.execute(0x0FEF)  # ADD R30, R31 -> (10, 10)
@@ -28,17 +29,17 @@ def test_overflow():
 
 def test_and():
     ino = ATMEGA328P()
-    ino.status.r0._xor(ino.status.r0.unsigned_value)
-    ino.status.r0._add(0b00001111)
-    ino.status.r1._xor(ino.status.r1.unsigned_value)
+    ino.status.r0.lxor(ino.status.r0.unsigned_value)
+    ino.status.r0.add(0b00001111)
+    ino.status.r1.lxor(ino.status.r1.unsigned_value)
     ino.execute(0x2001)  # AND R0, R1
     assert ino.status.r0.unsigned_value == 0b00000000
-    ino.status.r0._add(0b00001111)
-    ino.status.r1._add(0b00001010)
+    ino.status.r0.add(0b00001111)
+    ino.status.r1.add(0b00001010)
     ino.execute(0x2001)  # AND R0, R1
     assert ino.status.r0.unsigned_value == 0b00001010
-    ino.status.r0._xor(ino.status.r0.unsigned_value)
-    ino.status.r0._add(0b11111111)
+    ino.status.r0.lxor(ino.status.r0.unsigned_value)
+    ino.status.r0.add(0b11111111)
     ino.execute(0x7E0C)  # ANDI R0, 0xEC
     assert ino.status.r0.unsigned_value == 0xEC
 
@@ -51,3 +52,12 @@ def test_asr():
     ino.status.r0._value = 0x85
     ino.execute(0x9405)  # ASR R0
     assert ino.status.r0._value == 0x82 and ino.status.sreg.c and ino.status.sreg.n
+
+
+def test_sreg():
+    q = StatusReg()
+    print(q.i)
+    q.set_i()
+    print(q.i)
+    q.rst_i()
+    print(q.i)
