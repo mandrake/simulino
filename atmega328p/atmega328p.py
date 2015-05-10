@@ -113,7 +113,7 @@ class ATMEGA328P:
         if branch:
             self.status.pc.add(ops[1]) if ops[1] >= 0 else self.status.pc.sub(-ops[1])
 
-    def __BRBS(self, ops):
+    def __BRBS(self, ops): #
         branch = self.status.sreg.isset(ops[0])
         if branch:
             self.status.pc.add(ops[1]) if ops[1] >= 0 else self.status.pc.sub(-ops[1])
