@@ -205,105 +205,154 @@ opcodes = {
         'abstract': lambda x: ('CPI', 'R%d' % x[1], 'R%d' % (x[0] * 16 + x[2]))
     },
     '000100([01])([01]{5})([01]{4})': {
-        'repr': lambda x: 'CPSE R%d, R%d' % (x[1], x[0] * 16 + x[2])
+        'repr': lambda x: 'CPSE R%d, R%d' % (x[1], x[0] * 16 + x[2]),
+        'abstract': lambda x: ('CPSE', 'R%d' % x[1], 'R%d' % (x[0] * 16 + x[2]))
     },
     '1001010([01]{5})1010': {
-        'repr': lambda x: 'DEC R%d' % x[0]
+        'repr': lambda x: 'DEC R%d' % x[0],
+        'abstract': lambda x: ('DEC', 'R%d' % x[0])
     },
     '10010100([01]{4})1011': {
-        'repr': lambda x: 'DES %d' % x[0]
+        'repr': lambda x: 'DES %d' % x[0],
+        'abstract': lambda x: ('DES', x[0])
     },
     '1001010100011001': {
-        'repr': lambda x: 'EICALL'
+        'repr': lambda x: 'EICALL',
+        'abstract': lambda x: ('EICALL', )
     },
     '1001010000011001': {
-        'repr': lambda x: 'EIJMP'
+        'repr': lambda x: 'EIJMP',
+        'abstract': lambda x: ('EIJMP', )
     },
     '1001010111011000': {
-        'repr': lambda x: 'ELPM'
+        'repr': lambda x: 'ELPM',
+        'abstract': lambda x: ('ELPM', )
     },
     '1001000([01]{5})0110': {
-        'repr': lambda x: 'ELPM R%d, Z' % x[0]
+        'repr': lambda x: 'ELPM R%d, Z' % x[0],
+        'abstract': lambda x: ('ELPM', 'R%d' % x[0], 'Z')
     },
     '1001000([01]{5})0111': {
-        'repr': lambda x: 'ELPM R%d, Z+' % x[0]
+        'repr': lambda x: 'ELPM R%d, Z+' % x[0],
+        'abstract': lambda x: ('ELPM', 'R%d' % x[0], 'Z+')
     },
     '001001([01])([01]{5})([01]{4})': {
-        'repr': lambda x: 'EOR R%d, R%d' % (x[1], x[0] * 16 + x[2])
+        'repr': lambda x: 'EOR R%d, R%d' % (x[1], x[0] * 16 + x[2]),
+        'abstract': lambda x: ('EOR', 'R%d' % x[1], 'R%d' % (x[0] * 16 + x[2]))
     },
     '000000110([01]{3})1([01]{3})': {
-        'repr': lambda x: 'FMUL R%d, R%d' % (x[0] + 16, x[1] + 16)
+        'repr': lambda x: 'FMUL R%d, R%d' % (x[0] + 16, x[1] + 16),
+        'abstract': lambda x: ('FMUL', 'R%d' % (x[0] + 16), 'R%d' % (x[1] + 16))
     },
     '000000111([01]{3})0([01]{3})': {
-        'repr': lambda x: 'FMULS R%d, R%d' % (x[0] + 16, x[1] + 16)
+        'repr': lambda x: 'FMULS R%d, R%d' % (x[0] + 16, x[1] + 16),
+        'abstract': lambda x: ('FMULS', 'R%d' % (x[0] + 16), 'R%d' % (x[1] + 16))
     },
     '000000111([01]{3})1([01]{3})': {
-        'repr': lambda x: 'FMULSU R%d, R%d' % (x[0] + 16, x[1] + 16)
+        'repr': lambda x: 'FMULSU R%d, R%d' % (x[0] + 16, x[1] + 16),
+        'abstract': lambda x: ('FMULSU', 'R%d' % (x[0] + 16), 'R%d' % (x[1] + 16))
     },
     '1001010100001001': {
-        'repr': lambda x: 'ICALL'
+        'repr': lambda x: 'ICALL',
+        'abstract': lambda x: ('ICALL', )
     },
     '1001010000001001': {
-        'repr': lambda x: 'IJMP'
+        'repr': lambda x: 'IJMP',
+        'abstract': lambda x: ('IJMP', )
     },
     '10110([01]{2})([01]{5})([01]{3})': {
-        'repr': lambda x: 'IN R%d, %d' % (x[1], x[0] * 16 + x[2])
+        'repr': lambda x: 'IN R%d, %d' % (x[1], x[0] * 16 + x[2]),
+        'abstract': lambda x: ('IN', 'R%d' % x[1], x[0] * 16 + x[2])
     },
     '1001010([01]{5})0011': {
-        'repr': lambda x: 'INC R%d' % x[0]
+        'repr': lambda x: 'INC R%d' % x[0],
+        'abstract': lambda x: ('INC', 'R%d' % x[0])
     },
     '1001010([01]{5})110([01])': {
-        'repr': lambda x: 'JMP %d' % (x[10] * 2**17 + x[1] * 2**16 + x[2]),
+        'repr': lambda x: 'JMP %d' % (x[0] * 2**17 + x[1] * 2**16 + x[2]),
+        'abstract': lambda x: ('JMP', x[0] * 2**17 + x[1] * 2**16 + x[2]),
         'extra': 2
     },
     '1001001([01]{5})0110': {
-        'repr': lambda x: 'LAC R%d' % x[0]
+        'repr': lambda x: 'LAC R%d' % x[0],
+        'abstract': lambda x: ('LAC', 'R%d' % x[0])
     },
     '1001001([01]{5})0101': {
-        'repr': lambda x: 'LAS R%d' % x[0]
+        'repr': lambda x: 'LAS R%d' % x[0],
+        'abstract': lambda x: ('LAS', 'R%d' % x[0])
     },
     '1001001([01]{5})0111': {
-        'repr': lambda x: 'LAT R%d' % x[0]
+        'repr': lambda x: 'LAT R%d' % x[0],
+        'abstract': lambda x: ('LAT', 'R%d' % x[0])
     },
     '1001000([01]{5})1100': {
-        'repr': lambda x: 'LD R%d, X' % x[0]
+        'repr': lambda x: 'LD R%d, X' % x[0],
+        'abstract': lambda x: ('LD', 'R%d' % x[0], 'X')
     },
     '1001000([01]{5})1101': {
-        'repr': lambda x: 'LD R%d, X+' % x[0]
+        'repr': lambda x: 'LD R%d, X+' % x[0],
+        'abstract': lambda x: ('LD', 'R%d' % x[0], 'X+')
     },
     '1001000([01]{5})1110': {
-        'repr': lambda x: 'LD R%d, -X' % x[0]
+        'repr': lambda x: 'LD R%d, -X' % x[0],
+        'abstract': lambda x: ('LD', 'R%d' % x[0], '-X')
     },
     '1000000([01]{5})1000': {
-        'repr': lambda x: 'LD R%d, Y' % x[0]
+        'repr': lambda x: 'LD R%d, Y' % x[0],
+        'abstract': lambda x: ('LD', 'R%d' % x[0], 'Y')
     },
     '1001000([01]{5})1001': {
-        'repr': lambda x: 'LD R%d, Y+' % x[0]
+        'repr': lambda x: 'LD R%d, Y+' % x[0],
+        'abstract': lambda x: ('LD', 'R%d' % x[0], 'Y+')
     },
     '1001000([01]{5})1010': {
-        'repr': lambda x: 'LD R%d, -Y' % x[0]
+        'repr': lambda x: 'LD R%d, -Y' % x[0],
+        'abstract': lambda x: ('LD', 'R%d' % x[0], '-Y')
     },
     '10([01])0([01]{2})0([01]{5})1([01]{3})': {
-        'repr': lambda x: 'LDD R%d, Y+%d' % (x[2], x[0] * 2**5 + x[1] * 2**3 + x[3])
+        'repr': lambda x: 'LDD R%d, Y+%d' % (x[2], x[0] * 2**5 + x[1] * 2**3 + x[3]),
+        'abstract': lambda x: ('LD', 'R%d' % x[2], 'Y', x[0] * 2**5 + x[1] * 2**3 + x[3])
+    },
+    '1000000([01]{5})0000': {
+        'repr': lambda x: 'LD R%d, Z' % x[0],
+        'abstract': lambda x: ('LD', 'R%d' % x[0], 'Z')
+    },
+    '1001000([01]{5})0001': {
+        'repr': lambda x: 'LD R%d, Z+' % x[0],
+        'abstract': lambda x: ('LD', 'R%d' % x[0], 'Z+')
+    },
+    '1001000([01]{5})0010': {
+        'repr': lambda x: 'LD R%d, -Z' % x[0],
+        'abstract': lambda x: ('LD', 'R%d' % x[0], '-Z')
+    },
+    '10([01])0([01]{2})0([01]{5})0([01]{3})': {
+        'repr': lambda x: 'LDD R%d, Z+%d' % (x[2], x[0] * 2**5 + x[1] * 2**3 + x[3]),
+        'abstract': lambda x: ('LD', 'R%d' % x[2], 'Z', x[0] * 2**5 + x[1] * 2**3 + x[3])
     },
     '1110([01]{4})([01]{4})([01]{4})': {
-        'repr': lambda x: 'LDI R%d, %d' % (x[1], x[0] * 2**4 + x[2])
+        'repr': lambda x: 'LDI R%d, %d' % (x[1], x[0] * 2**4 + x[2]),
+        'abstract': lambda x: ('LDI', 'R%d' % x[1], x[0] * 2**4 + x[2])
     },
     '1001000([01]{5})0000': {
         'repr': lambda x: 'LDS R%d, %d' % (x[0], x[1]),
+        'abstract': lambda x: ('LDS', 'R%d' % x[0], x[1]),
         'extra': 2
     },
     '10100([01]{3})([01]{4})([01]{4})': {
-        'repr': lambda x: 'LDS R%d, %d' % (x[1], x[0] * 2**4 + x[2])
+        'repr': lambda x: 'LDS R%d, %d' % (x[1], x[0] * 2**4 + x[2]),
+        'abstract': lambda x: ('LDS', 'R%d' % x[1], x[0] * 2**4 + x[2])
     },
     '1001010111001000': {
-        'repr': lambda x: 'LPM'
+        'repr': lambda x: 'LPM',
+        'abstract': lambda x: ('LPM', 'R0')
     },
     '1001000([01]{5})0100': {
-        'repr': lambda x: 'LPM R%d, Z' % x[0]
+        'repr': lambda x: 'LPM R%d, Z' % x[0],
+        'abstract': lambda x: ('LPM', 'R%d' % x[0], 'Z')
     },
     '1001000([01]{5})0101': {
-        'repr': lambda x: 'LPM R%d, Z+' % x[0]
+        'repr': lambda x: 'LPM R%d, Z+' % x[0],
+        'abstract': lambda x: ('LPM', 'R%d' % x[0], 'Z+')
     },
     '1001010([01]{5})0110': {
         'repr': lambda x: 'LSR R%d' % x[0]

@@ -1,11 +1,11 @@
 from copy import deepcopy
+
+from arch.avr import opcodes
 from atmega328p.data_mem_space import DataMemorySpace
 from atmega328p.ioregisters import IORegisters
 from atmega328p.memory import Memory
-from register.reg8 import Reg8
 from .status import Status
 from opcoder.opcoder import Opcoder
-from .opcodes import opcodes
 
 
 class ATMEGA328P:
@@ -15,8 +15,12 @@ class ATMEGA328P:
         self.ioregs = IORegisters()
         self.xiomem = Memory(160)
         self.sram = Memory(2048)
+        # Used for instructions like CPSE, it should be explicitly reset every time.
+        self.skip = False
         self.__opcodes = Opcoder(opcodes)
         self.__data_mem_space = DataMemorySpace(self.status, self.ioreg, self.xiomem, self.sram)
+        # On board flash memory
+        self.__program_mem_space = Memory(32*1024, 2)
 
     def execute(self, opcode):
         lkp = self.__opcodes.lookup(opcode, 16)  # entry, opcode values, size
@@ -25,6 +29,16 @@ class ATMEGA328P:
         # TODO: This sucks.
         getattr(self, '_ATMEGA328P__' + ab[0])(ab[1:])
         self.status.pc.inc()
+
+    def __stack_push_pc(self):
+        self.__data_mem_space[self.ioregs.sp] = (self.status.pc + 2) // 256
+        self.__data_mem_space[self.ioregs.sp-1] = (self.status.pc + 2) % 256
+        self.ioregs.sp.sub(2)
+
+    def __stack_pop_pc(self):
+        self.status.pc._value = self.__data_mem_space[self.ioregs.sp+1] * 256 + \
+                                self.__data_mem_space[self.ioregs.sp+2]
+        self.ioregs.sp.add(2)
 
     def __ADD(self, ops, carry=False):
         rdst = getattr(self.status, ops[0].lower())
@@ -38,7 +52,7 @@ class ATMEGA328P:
         self.status.sreg.h = bool(((rd & rs) | (rs & ~rr) | (rd & ~rr)) & 0x08)
         self.status.sreg.v = bool(((rd & rs & ~rr) | (~rd & ~rs & rr)) & 0x80)
         self.status.sreg.n = bool(rr & 0x80)
-        self.status.sreg.z = bool(rr)
+        self.status.sreg.z = not bool(rr)
         self.status.sreg.s = self.status.sreg.n ^ self.status.sreg.v
 
     def __ADC(self, ops):
@@ -64,7 +78,7 @@ class ATMEGA328P:
         self.status.sreg.c = bool(((rd & rs) | (rs & ~rr) | (rd & ~rr)) & 0x80)
         self.status.sreg.v = bool((~rd & rr & 0x80) != 0)
         self.status.sreg.n = bool(rr & 0x80)
-        self.status.sreg.z = bool(rr + rdstl.unsigned_value)
+        self.status.sreg.z = not bool(rr + rdstl.unsigned_value)
         self.status.sreg.s = self.status.sreg.n ^ self.status.sreg.v
 
     def __AND(self, ops):
@@ -74,7 +88,7 @@ class ATMEGA328P:
 
         self.status.sreg.v = False
         self.status.sreg.n = rdst.isset(7)
-        self.status.sreg.z = bool(rdst.unsigned_value)
+        self.status.sreg.z = not bool(rdst.unsigned_value)
         self.status.sreg.s = self.status.sreg.v ^ self.status.sreg.n
 
     def __ANDI(self, ops):
@@ -84,8 +98,8 @@ class ATMEGA328P:
         rdst.land(immb)
 
         self.status.sreg.v = False
-        self.status.sreg.n = bool(rdst.unsigned_value & 0x80)
-        self.status.sreg.z = bool(rdst.unsigned_value)
+        self.status.sreg.n = rdst.isset(7)
+        self.status.sreg.z = not bool(rdst.unsigned_value)
         self.status.sreg.s = self.status.sreg.v ^ self.status.sreg.n
 
     def __ASR(self, ops):
@@ -93,7 +107,7 @@ class ATMEGA328P:
         self.status.sreg.c = bool(rdst.unsigned_value % 2)
         rdst._value = (rdst._value & 0x80) + (rdst._value & 0x7F) // 2
         self.status.sreg.n = rdst.isset(7)
-        self.status.sreg.z = bool(rdst._value)
+        self.status.sreg.z = not bool(rdst._value)
         self.status.sreg.v = self.status.sreg.n ^ self.status.sreg.c
         self.status.sreg.s = self.status.sreg.n ^ self.status.sreg.v
 
@@ -129,21 +143,20 @@ class ATMEGA328P:
         self.status.sreg.t = rdst.isset(ops[1])
 
     def __CALL(self, ops):
-        self.__data_mem_space[self.ioregs.sp] = (self.status.pc + 2) // 256
-        self.__data_mem_space[self.ioregs.sp-1] = (self.status.pc + 2) % 256
+        self.__stack_push_pc()
         self.status.pc._value = ops[0]
-        self.ioregs.sp.sub(2)
 
     def __CBI(self, ops):
-        self.__data_mem_space[ops[0]] &= 255 - (2**ops[1])
+        # TODO: avoid address constants
+        self.__data_mem_space[0x20 + ops[0]] &= 255 - (2**ops[1])
 
     def __CBR(self, ops):
         rdst = getattr(self.status, ops[0].lower())
         rdst.land(256 - ops[1])
 
-        self.status.sreg.v = 0
+        self.status.sreg.v = False
         self.status.sreg.n = rdst.isset(7)
-        self.status.sreg.z = bool(rdst.unsigned_value)
+        self.status.sreg.z = not bool(rdst.unsigned_value)
         self.status.sreg.s = self.status.sreg.v ^ self.status.sreg.n
 
     def __COM(self, ops):
@@ -168,7 +181,7 @@ class ATMEGA328P:
         self.status.sreg.h = bool(((rd & rs) | (rs & ~rr) | (rd & ~rr)) & 0x08)
         self.status.sreg.v = bool(((rd & rs & ~rr) | (~rd & ~rs & rr)) & 0x80)
         self.status.sreg.n = bool(rr & 0x80)
-        self.status.sreg.z = bool(rr)
+        self.status.sreg.z = not bool(rr)
         self.status.sreg.s = self.status.sreg.n ^ self.status.sreg.v
 
     def __CPC(self, ops):
@@ -176,6 +189,135 @@ class ATMEGA328P:
 
     def __CPI(self, ops):
         self.__CP(self, ops, immediate=True)
+
+    def __CPSE(self, ops):
+        r1 = getattr(self.status, ops[0].lower())
+        r2 = getattr(self.status, ops[1].lower())
+
+        if r1.unsigned_value == r2.unsigned_value:
+            self.skip = True
+
+    def __DEC(self, ops):
+        rdst = getattr(self.status, ops[0].lower())
+        rdst.dec()
+
+        self.status.sreg.z = not bool(rdst.unsigned_value)
+        self.status.sreg.n = rdst.isset(7)
+        self.status.sreg.v = rdst.unsigned_value == 0x7F
+        self.status.sreg.s = self.status.sreg.n ^ self.status.sreg.v
+
+    def __DES(self, ops):
+        raise Exception("Not here, actually")
+
+    def __EOR(self, ops):
+        rdst = getattr(self.status, ops[0].lower())
+        rsrc = getattr(self.status, ops[1].lower())
+        rdst.lxor(rsrc.unsigned_value)
+
+        self.status.sreg.v = False
+        self.status.sreg.n = rdst.isset(7)
+        self.status.sreg.s = self.status.sreg.v ^ self.status.sreg.n
+        self.status.sreg.z = not bool(rdst)
+
+    def __FMUL(self, ops, signed=(False, False)):
+        # TODO: Check more thoroughly
+        mul1 = getattr(self.status, ops[0].lower())
+        mul2 = getattr(self.status, ops[1].lower())
+
+        mul1v = mul1.unsigned_value + (0xFF00 if mul1.isset(7) and signed[0] else 0)
+        mul2v = mul2.unsigned_value + (0xFF00 if mul2.isset(7) and signed[1] else 0)
+
+        result = (mul1v * mul2v * 2) & 0x1FFFF
+
+        self.status.sreg.c = bool(result & 0x10000)
+        result &= 0xFFFF
+        self.status.sreg.z = not bool(result)
+
+        self.status.r1._value = result // 256
+        self.status.r0._value = result % 256
+
+    def __FMULS(self, ops):
+        self.__FMUL(ops, (True, True))
+
+    def __FMULSU(self, ops):
+        self.__FMUL(ops, (True, False))
+
+    def __ICALL(self, ops):
+        self.__stack_push_pc()
+        self.status.pc._value = self.status.z._value
+
+    def __IJMP(self, ops):
+        self.status.pc._value = self.status.z._value
+
+    def __IN(self, ops):
+        rdst = getattr(self.status, ops[0].lower())
+        rdst._value = self.__data_mem_space[0x20 + ops[1]]
+
+    def __INC(self, ops):
+        rdst = getattr(self.status, ops[0].lower())
+        rdst.add(1)
+
+        self.status.sreg.v = rdst._value == 0x80
+        self.status.sreg.z = not bool(rdst._value)
+        self.status.sreg.n = rdst.isset(7)
+        self.status.sreg.s = self.status.sreg.n ^ self.status.sreg.v
+
+    def __JMP(self, ops):
+        self.status.pc._value = ops[1]
+
+    def __LAC(self, ops):
+        #rsrc = getattr(self.status, ops[0].lower())
+        #self.status.z._value = self.status.z._value & (0xFF - rsrc._value)
+        raise Exception("LAC instruction not available on this CPU")
+
+    def __LAS(self, ops):
+        raise Exception("LAS instruction not available on this CPU")
+
+    def __LAT(self, ops):
+        raise Exception("LAT instruction not available on this CPU")
+
+    def __LD(self, ops):
+        rdst = getattr(self.status, ops[0].lower())
+        if 'X' in ops[1]:
+            if ops[1] == '-X':
+                self.status.x.dec()
+            rdst._value = self.__data_mem_space[self.status.x.unsigned_value]
+            if ops[1] == 'X+':
+                self.status.x.inc()
+        elif 'Y' in ops[1]:
+            if ops[1] == '-Y':
+                self.status.y.dec()
+            if len(ops) == 3:
+                rdst._value = self.__data_mem_space[self.status.y.unsigned_value + ops[2]]
+            else:
+                rdst._value = self.__data_mem_space[self.status.y.unsigned_value]
+            if ops[1] == 'Y+':
+                self.status.y.inc()
+        elif 'Z' in ops[1]:
+            if ops[1] == '-Z':
+                self.status.z.dec()
+            if len(ops) == 3:
+                rdst._value = self.__data_mem_space[self.status.z.unsigned_value + ops[2]]
+            else:
+                rdst._value = self.__data_mem_space[self.status.z.unsigned_value]
+            if ops[1] == 'Z+':
+                self.status.z.inc()
+
+    def __LDI(self, ops):
+        getattr(self.status, ops[0].lower())._value = ops[1]
+
+    def __LDS(self, ops):
+        getattr(self.status, ops[0].lower())._value = self.__data_mem_space[ops[1]]
+
+    def __LPM(self, ops):
+        if len(ops) == 0:
+            self.status.r0._value = self.__program_mem_space[self.status.z._value]
+        else:
+            # TODO: check for spurious arguments?
+            rdst = getattr(self.status, ops[0].lower())
+            rdst._value = self.__program_mem_space[self.status.z._value]
+            if ops[1] == 'Z+':
+                self.status.z.inc()
 
     def sbroscia(self, file):
         data = file.read()
