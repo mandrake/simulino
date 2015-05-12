@@ -1,5 +1,6 @@
 from builtins import property
 from register.proxyregister import ProxyRegister16
+from register.reg16 import Reg16
 from register.reg8 import Reg8
 
 
@@ -16,21 +17,29 @@ class IORegisters:
         self.__gpio_r1 = Reg8()
         self.__gpio_r2 = Reg8()
 
-        self.__stack_pointer = ProxyRegister16(self.__stack_pointer_low, self.__stack_pointer_high)
+        # TODO: implement __stack_pointer as a proxyregister
+        # self.__stack_pointer = ProxyRegister16(self.__stack_pointer_low, self.__stack_pointer_high)
+        self.__stack_pointer = Reg16()
         self.__eeprom_address = ProxyRegister16(self.__eeprom_address_low, self.__eeprom_address_high)
 
         self.__mapping = {
-            0x1E: self.__iodata.gpior0, 0x1F: self.__iodata.eecr,
-            0x20: self.__iodata.eedr, 0x21: self.__iodata.eearl, 0x22: self.__iodata.eearh,
-            0x2A: self.__iodata.gpior1, 0x2B: self.__iodata.gpior2,
-            0x3D: self.__iodata.spl, 0x3E: self.__iodata.sph
+            0x1E: self.gpior0, 0x1F: self.eecr,
+            0x20: self.eedr, 0x21: self.eearl, 0x22: self.eearh,
+            0x2A: self.gpior1, 0x2B: self.gpior2,
+            0x3D: self.spl, 0x3E: self.sph
         }
 
     def __getitem__(self, item):
-        return self.__mapping[item]
+        if item in self.__mapping:
+            return self.__mapping[item]
+        else:
+            return Reg8()
 
     def __setitem__(self, key, value):
-        self.__mapping[key]._value = value
+        if key in self.__mapping:
+            self.__mapping[key]._value = value
+        else:
+            print("TODO: register " + str(key) + " not available yet.")
 
     @property
     def sp(self):

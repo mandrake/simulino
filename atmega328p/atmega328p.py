@@ -1,6 +1,6 @@
 from copy import deepcopy
 
-from arch.avr import opcodes
+from arch.avr.opcodes import opcodes
 from atmega328p.data_mem_space import DataMemorySpace
 from atmega328p.ioregisters import IORegisters
 from atmega328p.memory import Memory
@@ -25,14 +25,35 @@ class ATMEGA328P:
         # Used for instructions like CPSE, it should be explicitly reset every time.
         self.skip = False
         self.__opcodes = Opcoder(opcodes)
-        self.__data_mem_space = DataMemorySpace(self.status, self.ioreg, self.xiomem, self.sram)
+        self.__data_mem_space = DataMemorySpace(self.status, self.ioregs, self.xiomem, self.sram)
         # On board flash memory
         self.__program_mem_space = Memory(32*1024, 2)
+        self.__reset()
 
-    def execute(self, opcode):
-        lkp = self.__opcodes.lookup(opcode, 16)  # entry, opcode values, size
+    def __reset(self):
+        self.status.pc._value = 0
+        self.ioregs.sp._value = 0x08FF
+
+    def load_program(self, bin):
+        i = 0
+        for b in bin:
+            self.__program_mem_space[i] = b
+            i += 1
+
+    def execute(self):
+        # name, opcode values, size
+        instr = self.__program_mem_space[self.status.pc.unsigned_value]
+        lkp = self.__opcodes.lookup(instr, 16)
+        if lkp[0] is None:
+            instr *= 2**16
+            instr += self.__program_mem_space[self.status.pc.unsigned_value + 1]
+            lkp = self.__opcodes.lookup(instr, 32)
+            if lkp[0] is None:
+                raise Exception("Wrong opcode")
         op = lkp[0]  # has 'repr' and 'abstract'
+        print(op['repr'](lkp[1]))
         ab = op['abstract'](lkp[1])  # returns (opcode, operand1, operand2, ...)
+        print(ab)
         # TODO: This sucks.
         getattr(self, '_ATMEGA328P__' + ab[0])(ab[1:])
         self.status.pc.inc()
@@ -42,32 +63,32 @@ class ATMEGA328P:
             self.__data_mem_space[self.ioregs.sp] = value
             self.ioregs.sp.dec()
         elif size == 2:
-            self.__data_mem_space[self.ioregs.sp] = value // 256
-            self.__data_mem_space[self.ioregs.sp-1] = value % 256
+            self.__data_mem_space[self.ioregs.sp.unsigned_value] = value // 256
+            self.__data_mem_space[self.ioregs.sp.unsigned_value-1] = value % 256
             self.ioregs.sp.sub(2)
         else:
             raise Exception("Shouldn't happen")
 
     def __stack_push_register(self, reg: Register):
         if isinstance(reg, Reg8):
-            self.__data_mem_space[self.ioregs.sp] = reg.unsigned_value
+            self.__data_mem_space[self.ioregs.sp.unsigned_value] = reg.unsigned_value
             self.ioregs.sp.dec()
         elif isinstance(reg, Reg16):
             # TODO: handle proxy registers
-            self.__data_mem_space[self.ioregs.sp] = reg.unsigned_value // 256
-            self.__data_mem_space[self.ioregs.sp-1] = reg.unsigned_value % 256
+            self.__data_mem_space[self.ioregs.sp.unsigned_value] = reg.unsigned_value // 256
+            self.__data_mem_space[self.ioregs.sp.unsigned_value-1] = reg.unsigned_value % 256
             self.ioregs.sp.sub(2)
         else:
             raise Exception("Shouldn't happen")
 
     def __stack_pop_register(self, reg: Register):
         if isinstance(reg, Reg8):
-            reg._value = self.__data_mem_space[self.ioregs.sp+1]
+            reg._value = self.__data_mem_space[self.ioregs.sp.unsigned_value+1]
             self.ioregs.sp.inc()
         elif isinstance(reg, Reg16):
             # TODO: handle proxy registers
-            reg._value = self.__data_mem_space[self.ioregs.sp+1] * 256 + \
-                         self.__data_mem_space[self.ioregs.sp+2]
+            reg._value = self.__data_mem_space[self.ioregs.sp.unsigned_value+1] * 256 + \
+                         self.__data_mem_space[self.ioregs.sp.unsigned_value+2]
             self.ioregs.sp.add(2)
         else:
             raise Exception("Shouldn't happen")
@@ -196,17 +217,21 @@ class ATMEGA328P:
         rdst.lxor(0xff)
 
     def __CP(self, ops, carry=False, immediate=False):
-        rdst = getattr(self.status, ops[0].lower())
-        rsrc = getattr(self.status, ops[1].lower())
+        rdst = self.status[ops[0]]
+        if not immediate:
+            rsrc = getattr(self.status, ops[1].lower())
         rrrr = deepcopy(rdst)
-        if carry:
+        if carry and not immediate:
             rrrr.sub(rsrc.unsigned_value + 1 if self.status.sreg.c else 0)
         elif immediate:
-            rrrr.sub(rsrc.unsigned_value + 1 if self.status.sreg.i else 0)
+            rrrr.sub(ops[1] + 1 if self.status.sreg.i else 0)
         else:
             rrrr.sub(rsrc.unsigned_value)
         rd = rdst.unsigned_value
-        rs = rsrc.unsigned_value
+        if not immediate:
+            rs = rsrc.unsigned_value
+        else:
+            rs = ops[1]
         rr = rrrr.unsigned_value
 
         self.status.sreg.c = bool(((rd & rs) | (rs & ~rr) | (rd & ~rr)) & 0x80)
@@ -217,10 +242,10 @@ class ATMEGA328P:
         self.status.sreg.s = self.status.sreg.n ^ self.status.sreg.v
 
     def __CPC(self, ops):
-        self.__CP(self, ops, carry=True)
+        self.__CP(ops, carry=True)
 
     def __CPI(self, ops):
-        self.__CP(self, ops, immediate=True)
+        self.__CP(ops, immediate=True)
 
     def __CPSE(self, ops):
         r1 = getattr(self.status, ops[0].lower())
@@ -295,7 +320,7 @@ class ATMEGA328P:
         self.status.sreg.s = self.status.sreg.n ^ self.status.sreg.v
 
     def __JMP(self, ops):
-        self.status.pc._value = ops[1]
+        self.status.pc._value = ops[0]
 
     def __LAC(self, ops):
         #rsrc = getattr(self.status, ops[0].lower())

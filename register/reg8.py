@@ -19,6 +19,9 @@ class Reg8(Register):
         else:
             self.land(self.max_value - (2**(7-bit)))
 
+    def isset(self, bit):
+        return bool(self._value & (2**bit))
+
     def set(self, bit):
         if bit < 0 or bit > 7:
             raise Exception("NOPE.WAV")

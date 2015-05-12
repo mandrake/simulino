@@ -8,19 +8,16 @@ class Opcoder:
 
     def lookup(self, code, bits):
         scode = bin(code)[2:]
-        if len(scode) % bits != 0:
-            scode = '0' * (bits - (len(scode) % bits)) + scode
+        if len(scode) < bits:
+            scode = '0' * (bits - len(scode)) + scode
 
         size = bits
         for regex in self.__opcodes:
-            res = re.match(regex, scode[0:16])
+            res = re.match(regex, scode)
             if res is not None:
                 # {'repr': '...', 'abstract': '...'}
                 oc = self.__opcodes[regex]
                 ops = [int(x, 2) for x in res.groups()]
-                if 'extra' in oc:
-                    ops.append(int(scode[16:16+8*oc['extra']]))
-                    size += oc['extra']
                 return oc, ops, size
 
-        return '???', [], 16
+        return None, None, None

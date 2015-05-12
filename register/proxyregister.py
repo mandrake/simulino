@@ -63,3 +63,8 @@ class ProxyRegister16(Register):
         carry = (self.__reg_low.unsigned_value - (value % 256)) < 0
         self.__reg_low.sub(value % 256)
         self.__reg_high.sub((value // 256) + (1 if carry else 0))
+
+    @property
+    def unsigned_value(self):
+        print(self.__reg_high.unsigned_value, self.__reg_low.unsigned_value)
+        return self.__reg_low.unsigned_value + (self.__reg_high.unsigned_value * 256)

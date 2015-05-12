@@ -202,7 +202,7 @@ opcodes = {
     },
     '0011([01]{4})([01]{4})([01]{4})': {
         'repr': lambda x: 'CPI R%d, %d' % (x[1], x[0] * 16 + x[2]),
-        'abstract': lambda x: ('CPI', 'R%d' % x[1], 'R%d' % (x[0] * 16 + x[2]))
+        'abstract': lambda x: ('CPI', 'R%d' % x[1], (x[0] * 16 + x[2]))
     },
     '000100([01])([01]{5})([01]{4})': {
         'repr': lambda x: 'CPSE R%d, R%d' % (x[1], x[0] * 16 + x[2]),
@@ -268,10 +268,9 @@ opcodes = {
         'repr': lambda x: 'INC R%d' % x[0],
         'abstract': lambda x: ('INC', 'R%d' % x[0])
     },
-    '1001010([01]{5})110([01])': {
+    '1001010([01]{5})110([01])([01]{16})': {
         'repr': lambda x: 'JMP %d' % (x[0] * 2**17 + x[1] * 2**16 + x[2]),
         'abstract': lambda x: ('JMP', x[0] * 2**17 + x[1] * 2**16 + x[2]),
-        'extra': 2
     },
     '1001001([01]{5})0110': {
         'repr': lambda x: 'LAC R%d' % x[0],
@@ -333,10 +332,9 @@ opcodes = {
         'repr': lambda x: 'LDI R%d, %d' % (x[1], x[0] * 2**4 + x[2]),
         'abstract': lambda x: ('LDI', 'R%d' % x[1], x[0] * 2**4 + x[2])
     },
-    '1001000([01]{5})0000': {
+    '1001000([01]{5})0000([01]{16})': {
         'repr': lambda x: 'LDS R%d, %d' % (x[0], x[1]),
-        'abstract': lambda x: ('LDS', 'R%d' % x[0], x[1]),
-        'extra': 2
+        'abstract': lambda x: ('LDS', 'R%d' % x[0], x[1])
     },
     '10100([01]{3})([01]{4})([01]{4})': {
         'repr': lambda x: 'LDS R%d, %d' % (x[1], x[0] * 2**4 + x[2]),
@@ -558,10 +556,9 @@ opcodes = {
         'repr': lambda x: 'ST Z+%d, R%d' % (x[0] * 2**5 + x[1] * 2**3 + x[3], x[2]),
         'abstract': lambda x: ('ST', 'Z', x[0] * 2**5 + x[1] * 2**3 + x[3], 'R%d' % x[2])
     },
-    '1001001([01]{5})0000': {
+    '1001001([01]{5})0000([01]{16})': {
         'repr': lambda x: 'STS %d, R%d' % (x[1], x[0]),
-        'abstract': lambda x: ('STS', x[1], 'R%d' % x[0]),
-        'extra': 2
+        'abstract': lambda x: ('STS', x[1], 'R%d' % x[0])
     },
     '10101([01]{3})([01]{4})([01]{4})': {
         'repr': lambda x: 'STS %d, R%d' % (x[0] * 2**4 + x[2], x[1]),
